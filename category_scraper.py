@@ -11,9 +11,9 @@ page = requests.get(url)
 #parse page content into a soup object
 soup = BeautifulSoup(page.content, 'html.parser')
 
-#create a list to store the page items
+#create lists to store the page items
 books = []
-
+header = []
 #target outer tag
 list_items = soup.find_all('article', class_='product_pod')
 
@@ -21,3 +21,10 @@ list_items = soup.find_all('article', class_='product_pod')
 for item in list_items:
     link = soup.find('a').get('href')
     books.append(link)
+
+#open csv file and write data to file
+with open('category.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile, delimiter=',')
+    writer.writerow(header)
+    row = books
+    writer.writerow(row)
