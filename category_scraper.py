@@ -19,12 +19,13 @@ list_items = soup.find_all('article', class_='product_pod')
 
 #loop through to find inner tag and append to list
 for item in list_items:
-    link = soup.find('a').get('href')
-    books.append(link)
-
+    link = list_items.find('a').get('href')
+    print(link)    #books.append(link)
+'''
 #open csv file and write data to file
 with open('category.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
     writer.writerow(header)
     row = books
     writer.writerow(row)
+'''
