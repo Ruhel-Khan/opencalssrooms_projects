@@ -36,14 +36,14 @@ for i in all_categories:
 
 #loop through the category list to join base url to category url and return soup object
 for category in categories:
-    cat_page = urljoin(url , category)
+    cat_page = urljoin(url, category)
     page = requests.get(cat_page)
     soup = BeautifulSoup(page.text, 'lxml')
-    csv_header = soup.find('h1').text
+    header = soup.find('h1').text
     #loop through pages in each category
     for page in category:
         #open csv files with current category as the filename and write file headers
-        with open(f'{csv_header}.csv', 'w', encoding='utf8', newline='') as csvfile:
+            csvfile = open(f'{header}.csv', 'w', encoding='utf8', newline='') #open(f'{header}.jpg', 'wb') as imgfile:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(headers)
         #get all the book urls on page
@@ -54,13 +54,10 @@ for category in categories:
             for book in products_urls:
                 prod_page = urljoin(cat_page, book)
                 page = requests.get(prod_page)
+                #print(page.url)
                 soup = BeautifulSoup(page.text, 'lxml')
 
-                #get all the required book info and append to lists
-                book_title = soup.find("h1").text
-                title.append(book_title)
-
-
+                #get all the required book info and append to lis
                 book_cat = soup.find_all("a")[3].text
                 cat.append(book_cat)
 
@@ -88,6 +85,20 @@ for category in categories:
                 urls = page.url
                 book_urls.append(urls)
 
+                book_title = soup.find("h1").text
+                title.append(book_title)
+
+                title_formated = book_title.replace(' ', '').replace('\'', '').replace(':','')
+                img_url  = urljoin(url, cover_url)
+                image_page = requests.get(img_url, stream=True)
+                imagefile = open(f'{header}_{title_formated}.jpg', 'wb')
+                print(title_formated)
+                imagefile.write(image_page.content)
+                imagefile.close()
+                #print(page.url)
+                #image_download.append(image_page.content)
+                #print(len(image_download))
+
                 #check for page pagination and set next page
             if next_page_element:
                 next_page_url = next_page_element.get('href')
@@ -96,6 +107,17 @@ for category in categories:
                 soup = BeautifulSoup(page.text, 'lxml')
             else:
                 #write data to csv file from data lists
+                '''print(len(title))
+                print(len(upc))
+                print(len(priceExVat))
+                print(len(priceIncVat))
+                print(len(nums_available))
+                print(len(cat))
+                print(len(rating))
+                print(len(book_urls))
+                print(len(image_url))
+                print(len(desc))'''
+
 
                 for i in range(len(title)):
                     #print(i)
@@ -103,8 +125,16 @@ for category in categories:
                     row = [title[i], upc[i], priceExVat[i], priceIncVat[i], nums_available[i], cat[i], rating[i], book_urls[i], image_url[i], desc[i]]
 
                     writer.writerow(row)
-                    #empty all the lists for next category
 
+
+                    #print(image_page.content)
+                    #for chunk in image_page.iter_content(chunk_size=8192):
+                        #imgfile.write(chunk)
+                    #image = image_download[i]
+                    #imgfile.write(image)
+
+                #empty all the lists for next category
+                csvfile.close()
                 title.clear()
                 upc.clear()
                 priceExVat.clear()
@@ -115,6 +145,7 @@ for category in categories:
                 book_urls.clear()
                 image_url.clear()
                 desc.clear()
+                image_download.clear()
 
                 break
 
