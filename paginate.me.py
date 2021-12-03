@@ -4,8 +4,6 @@ from bs4 import BeautifulSoup
 import csv
 from urllib.parse import urljoin
 
-#create lists to store the page items
-books = []
 #set url to scrape
 url = 'https://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html'
 #get all the urls on a page
@@ -14,6 +12,8 @@ def product_urls(soup):
     for item in list_items:
         link = item.find('a').get('href')
         books.append(link)
+#create lists to store the page items
+books = []
 #write to csv file
 def write_to_csv():
     with open('paginate.csv', 'w', newline='') as csvfile:
