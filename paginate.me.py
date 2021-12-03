@@ -1,44 +1,37 @@
+#imort required modules
 import requests
 from bs4 import BeautifulSoup
 import csv
-import time
+from urllib.parse import urljoin
 
-
-#loop for pagination range
-for x in range(1, 20):
-
-    #set url to scrape
-    url = 'https://books.toscrape.com/catalogue/category/books/fiction_10/page-'
-
-    #get page content
-    page = requests.get(url+str(x)+".html")
-
-    #parse page content into a soup object
-    soup = BeautifulSoup(page.content, 'html.parser')
-
-    #create lists to store the page items
-    books = []
-
-    #get the product page urls
-    products_urls = [x.div.a.get('href') for x in soup.findAll("article", class_ = "product_pod")]
-
-    #append urls to list
-    for url in products_urls:
-        books.append(url)
-
-    #open csv file and write data to file
+#create lists to store the page items
+books = []
+#set url to scrape
+url = 'https://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html'
+#get all the urls on a page
+def product_urls(soup):
+    list_items = soup.find_all('article', 'product_pod')
+    for item in list_items:
+        link = item.find('a').get('href')
+        books.append(link)
+#write to csv file
+def write_to_csv():
     with open('paginate.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
         row = books
         writer.writerow(row)
 
-    #get the next next page button tag
-    pager = soup.findAll('ul', class_= "pager")
-    next_btn = soup.find('li', class_= "next")
-
-    #set page exception
-    if next_btn == None:
+while True:
+    #parse html into a beautifulSoup object
+    page = requests.get(url)
+    #parse page content into a soup object
+    soup = BeautifulSoup(page.content, 'html.parser')
+    product_urls(soup)
+    #pagination
+    next_page_element = soup.select_one('li.next > a')
+    if next_page_element:
+        next_page_url = next_page_element.get('href')
+        url = urljoin(url, next_page_url)
+    else:
         break
-
-    #set a small time delay
-    time.sleep(1)
+write_to_csv()
