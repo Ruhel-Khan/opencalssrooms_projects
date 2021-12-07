@@ -1,3 +1,5 @@
+''' this program scrapes data from every product page on bookstoscrape website.
+It will not work on any other site unless the html markup is exactly the same.'''
 import requests
 from bs4 import BeautifulSoup
 import csv
@@ -16,11 +18,17 @@ rating = []
 image_url = []
 desc = []
 book_urls = []
-image_download = []
 headers = ["Title","UPC", "Price Excluding Tax", "Price Including Tax", "Numbers Available", "Category", "Review Rating","product_page_url", "Image URL", "Product Description" ]
 
-
-
+def remove_non_ascii(string):
+    encoded_string = string.encode("ascii", "ignore")
+    decode_string = encoded_string.decode()
+    return decode_string
+def format_title(book_title):
+    #format book titles for use as filename for image files
+    title_formated = [character for character in book_title if character.isalnum()]
+    title_formated = "".join(title_formated)
+    return title_formated
 
 #set base url and return the page html content into a soup object
 url = "https://books.toscrape.com/"
@@ -43,10 +51,10 @@ for category in categories:
     #loop through pages in each category
     for page in category:
         #open csv files with current category as the filename and write file headers
-            csvfile = open(f'{header}.csv', 'w', encoding='utf8', newline='') #open(f'{header}.jpg', 'wb') as imgfile:
+            csvfile = open(f'{header}.csv', 'w', encoding='utf8', newline='')
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(headers)
-        #get all the book urls on page
+            #get all the book urls on page
             products_urls = [x.div.a.get('href') for x in soup.find_all("article", class_ = "product_pod")]
             #find the element for the next page button
             next_page_element = soup.select_one('li.next > a')
@@ -54,51 +62,27 @@ for category in categories:
             for book in products_urls:
                 prod_page = urljoin(cat_page, book)
                 page = requests.get(prod_page)
-                #print(page.url)
                 soup = BeautifulSoup(page.text, 'lxml')
-
                 #get all the required book info and append to lis
-                book_cat = soup.find_all("a")[3].text
-                cat.append(book_cat)
-
-                book_upc = soup.find_all("td")[0].text
-                upc.append(book_upc)
-
-                price_ex_vat = soup.find_all("td")[2].text
-                priceExVat.append(price_ex_vat)
-
-                price_inc_vat = soup.find_all("td")[3].text
-                priceIncVat.append(price_inc_vat)
-
-                available = soup.find_all("td")[5].text
-                nums_available.append(available)
-
-                book_rating = soup.find("p", class_ = re.compile("star-rating")).get("class")[1]
-                rating.append(book_rating)
-
+                cat.append(remove_non_ascii(soup.find_all("a")[3].text))
+                upc.append(remove_non_ascii(soup.find_all("td")[0].text))
+                priceExVat.append(remove_non_ascii(soup.find_all("td")[2].text))
+                priceIncVat.append(remove_non_ascii(soup.find_all("td")[3].text))
+                nums_available.append(soup.find_all("td")[5].text)
+                rating.append(soup.find("p", class_ = re.compile("star-rating")).get("class")[1])
                 cover_url = soup.find("img").get("src")
                 image_url.append(cover_url)
-
-                book_desc = soup.find_all("p")[3].text
-                desc.append(book_desc)
-
-                urls = page.url
-                book_urls.append(urls)
-
-                book_title = soup.find("h1").text
+                desc.append(remove_non_ascii(soup.find_all("p")[3].text))
+                book_urls.append(page.url)
+                book_title = remove_non_ascii(soup.find("h1").text)
                 title.append(book_title)
-
-                title_formated = book_title.replace(' ', '').replace('\'', '').replace(':','')
+                #download the image
                 img_url  = urljoin(url, cover_url)
                 image_page = requests.get(img_url, stream=True)
-                imagefile = open(f'{header}_{title_formated}.jpg', 'wb')
-                print(title_formated)
+                #open image files and write byte data to files
+                imagefile = open(f'{header}_{format_title(book_title)}.jpg', 'wb')
                 imagefile.write(image_page.content)
                 imagefile.close()
-                #print(page.url)
-                #image_download.append(image_page.content)
-                #print(len(image_download))
-
                 #check for page pagination and set next page
             if next_page_element:
                 next_page_url = next_page_element.get('href')
@@ -106,33 +90,9 @@ for category in categories:
                 page = requests.get(page_url)
                 soup = BeautifulSoup(page.text, 'lxml')
             else:
-                #write data to csv file from data lists
-                '''print(len(title))
-                print(len(upc))
-                print(len(priceExVat))
-                print(len(priceIncVat))
-                print(len(nums_available))
-                print(len(cat))
-                print(len(rating))
-                print(len(book_urls))
-                print(len(image_url))
-                print(len(desc))'''
-
-
                 for i in range(len(title)):
-                    #print(i)
-                    #print(title)
                     row = [title[i], upc[i], priceExVat[i], priceIncVat[i], nums_available[i], cat[i], rating[i], book_urls[i], image_url[i], desc[i]]
-
                     writer.writerow(row)
-
-
-                    #print(image_page.content)
-                    #for chunk in image_page.iter_content(chunk_size=8192):
-                        #imgfile.write(chunk)
-                    #image = image_download[i]
-                    #imgfile.write(image)
-
                 #empty all the lists for next category
                 csvfile.close()
                 title.clear()
@@ -145,11 +105,4 @@ for category in categories:
                 book_urls.clear()
                 image_url.clear()
                 desc.clear()
-                image_download.clear()
-
                 break
-
-
-
-
-                    #check for pagination and set next page
