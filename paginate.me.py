@@ -1,11 +1,13 @@
-#imort required modules
+''' this program scrapes data from an category page with pagionation for multiple pages on bookstoscrape website.
+It will not work on any other site unless the html markup is exactly the same.'''
+#import required modules
 import requests
 from bs4 import BeautifulSoup
 import csv
 from urllib.parse import urljoin
 
 #set url to scrape
-url = 'https://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html'
+url = 'https://books.toscrape.com/catalogue/category/books/nonfiction_13/index.html'
 #get all the urls on a page
 def product_urls(soup):
     list_items = soup.find_all('article', 'product_pod')
