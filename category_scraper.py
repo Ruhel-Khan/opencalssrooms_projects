@@ -1,4 +1,5 @@
-
+''' this program scrapes data from an category page on bookstoscrape website.
+It will not work on any other site unless the html markup is exactly the same.'''
 #import required modules
 import requests
 from bs4 import BeautifulSoup
