@@ -2,7 +2,8 @@
 About:
 Openclassroom Python developement path project 02
 
-This is the project repo for project 02 of the python dev path. The objective is to build market anaylytical tools for market research purposes.
+This is the project repo for project 02 of the python dev path. 
+The objective is to build market anaylytical tools for market research purposes.
 
 
 Environment setup:
